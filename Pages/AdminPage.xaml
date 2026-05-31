@@ -1,0 +1,239 @@
+<Page x:Class="ManufacturingApp.Pages.AdminPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      Background="#f0f4f8"
+      Title="Администратор">
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page Title -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Панель администратора"
+                       FontFamily="Segoe UI Light" FontSize="26"
+                       Foreground="#1a3a5c"/>
+            <TextBlock Text="Управление пользователями системы"
+                       FontFamily="Segoe UI" FontSize="13"
+                       Foreground="#7f8c8d"/>
+        </StackPanel>
+
+        <!-- Content Grid -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="320"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT: Users Table -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,16,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal"
+                                Margin="0,0,0,14">
+                        <TextBlock Text="👥 Список пользователей"
+                                   FontFamily="Segoe UI Semibold" FontSize="15"
+                                   Foreground="#2c3e50" VerticalAlignment="Center"/>
+                        <Button Content="🔄 Обновить" x:Name="BtnRefresh"
+                                Click="BtnRefresh_Click"
+                                Style="{StaticResource PrimaryButton}"
+                                FontSize="11" Padding="10,5"
+                                Margin="12,0,0,0"/>
+                    </StackPanel>
+
+                    <DataGrid Grid.Row="1" x:Name="DgUsers"
+                              AutoGenerateColumns="False"
+                              SelectionChanged="DgUsers_SelectionChanged"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              RowHeaderWidth="0"
+                              FontFamily="Segoe UI" FontSize="12"
+                              Background="White"
+                              AlternatingRowBackground="#f8fafc"
+                              BorderThickness="0"
+                              RowHeight="36"
+                              ColumnHeaderHeight="38"
+                              CanUserResizeRows="False">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background"         Value="#1a3a5c"/>
+                                <Setter Property="Foreground"         Value="White"/>
+                                <Setter Property="FontFamily"         Value="Segoe UI Semibold"/>
+                                <Setter Property="FontSize"           Value="12"/>
+                                <Setter Property="Padding"            Value="10,0"/>
+                                <Setter Property="BorderThickness"    Value="0"/>
+                                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID"      Binding="{Binding UserID}" Width="50"/>
+                            <DataGridTextColumn Header="Логин"   Binding="{Binding Login}"  Width="*"/>
+                            <DataGridTextColumn Header="Роль"    Binding="{Binding RoleName}" Width="130"/>
+                            <DataGridTemplateColumn Header="Статус" Width="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border CornerRadius="10" Padding="8,2"
+                                                HorizontalAlignment="Left" Margin="4,0">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#e8f8f0"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsBlocked}" Value="True">
+                                                            <Setter Property="Background" Value="#fdecea"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock FontFamily="Segoe UI" FontSize="11">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text"       Value="✔ Активен"/>
+                                                        <Setter Property="Foreground" Value="#27ae60"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBlocked}" Value="True">
+                                                                <Setter Property="Text"       Value="✖ Заблокирован"/>
+                                                                <Setter Property="Foreground" Value="#c0392b"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Попытки" Binding="{Binding FailedAttempts}" Width="80"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="2" x:Name="TbUserCount"
+                               FontFamily="Segoe UI" FontSize="11"
+                               Foreground="#7f8c8d" Margin="0,8,0,0"/>
+                </Grid>
+            </Border>
+
+            <!-- RIGHT: Edit / Add Panel -->
+            <Border Grid.Column="1" Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock x:Name="TbFormTitle"
+                               Text="➕ Новый пользователь"
+                               FontFamily="Segoe UI Semibold" FontSize="15"
+                               Foreground="#2c3e50" Margin="0,0,0,16"/>
+
+                    <!-- Status message -->
+                    <Border x:Name="BannerMsg" CornerRadius="6"
+                            Padding="10,7" Margin="0,0,0,12"
+                            Visibility="Collapsed">
+                        <TextBlock x:Name="TbMsg" TextWrapping="Wrap"
+                                   FontFamily="Segoe UI" FontSize="12"/>
+                    </Border>
+
+                    <TextBlock Text="Логин" Style="{StaticResource FieldLabel}"/>
+                    <TextBox x:Name="TbEditLogin" Style="{StaticResource ModernTextBox}"
+                             Height="36" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Новый пароль (оставьте пустым для сохранения)"
+                               Style="{StaticResource FieldLabel}" TextWrapping="Wrap"/>
+                    <PasswordBox x:Name="PbEditPassword" Style="{StaticResource ModernPasswordBox}"
+                                 Height="36" Margin="0,0,0,12"/>
+
+                    <TextBlock Text="Роль" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox x:Name="CbRole" Height="36" Margin="0,0,0,12"
+                              FontFamily="Segoe UI" FontSize="13"
+                              DisplayMemberPath="RoleName"
+                              SelectedValuePath="RoleID"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12"
+                                x:Name="PanelBlockStatus">
+                        <CheckBox x:Name="ChkBlocked" VerticalAlignment="Center"
+                                  Margin="0,0,8,0"/>
+                        <TextBlock Text="Заблокирован" FontFamily="Segoe UI"
+                                   FontSize="13" Foreground="#2c3e50"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <Separator Margin="0,0,0,12"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="💾 Сохранить"
+                                x:Name="BtnSave" Click="BtnSave_Click"
+                                Style="{StaticResource SuccessButton}"
+                                Height="38" FontSize="13"/>
+                        <Button Grid.Column="2" Content="✖ Очистить"
+                                x:Name="BtnClear" Click="BtnClear_Click"
+                                Background="#95a5a6" Foreground="White"
+                                FontFamily="Segoe UI" FontSize="13"
+                                Height="38" BorderThickness="0" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}"
+                                            CornerRadius="6" Padding="4">
+                                        <ContentPresenter HorizontalAlignment="Center"
+                                                          VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#7f8c8d"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+
+                    <!-- Orders summary section -->
+                    <Separator Margin="0,16,0,12"/>
+                    <TextBlock Text="📋 Сводка по заказам"
+                               FontFamily="Segoe UI Semibold" FontSize="14"
+                               Foreground="#2c3e50" Margin="0,0,0,8"/>
+                    <Button Content="Показать заказы" x:Name="BtnShowOrders"
+                            Click="BtnShowOrders_Click"
+                            Style="{StaticResource PrimaryButton}"
+                            FontSize="12" Padding="12,7"/>
+                    <DataGrid x:Name="DgOrders" Margin="0,8,0,0"
+                              MaxHeight="200"
+                              AutoGenerateColumns="False"
+                              IsReadOnly="True"
+                              GridLinesVisibility="Horizontal"
+                              HeadersVisibility="Column"
+                              RowHeaderWidth="0"
+                              FontFamily="Segoe UI" FontSize="11"
+                              Background="White"
+                              BorderThickness="1" BorderBrush="#e2e8f0"
+                              RowHeight="30" ColumnHeaderHeight="32"
+                              Visibility="Collapsed">
+                        <DataGrid.ColumnHeaderStyle>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#34495e"/>
+                                <Setter Property="Foreground" Value="White"/>
+                                <Setter Property="FontFamily" Value="Segoe UI Semibold"/>
+                                <Setter Property="FontSize"   Value="11"/>
+                                <Setter Property="Padding"    Value="8,0"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Style>
+                        </DataGrid.ColumnHeaderStyle>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="№"        Binding="{Binding OrderID}"      Width="40"/>
+                            <DataGridTextColumn Header="Дата"     Binding="{Binding OrderDate, StringFormat=dd.MM.yyyy}" Width="80"/>
+                            <DataGridTextColumn Header="Заказчик" Binding="{Binding CustomerName}" Width="*"/>
+                            <DataGridTextColumn Header="Сумма"    Binding="{Binding TotalOrderCost, StringFormat=N2}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</Page>
